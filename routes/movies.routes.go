@@ -26,7 +26,12 @@ func UseMoviesRoutes(router fiber.Router) {
 
 	//pelicula por id
 	router.Get("/:id", func(c *fiber.Ctx) error {
-		id, _ := c.ParamsInt("id")
+		id, err := c.ParamsInt("id")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"Error": "Id invalido",
+			})
+		}
 		
 		// for _, movie := range movies {
 		// 	if movie.Id == id {
@@ -78,5 +83,72 @@ func UseMoviesRoutes(router fiber.Router) {
 
 	})
 
+	//actualizar pelicula
+// actualizar pelicula
+router.Put("/:id", func(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id") //leo el id
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"Error": "Id invalido",
+		})
+	}
+
+	type Request struct {
+		Title string `json:"title"`
+	}
+
+	var body Request
+
+	err = c.BodyParser(&body) //parseo el body
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"Error": "Invalid request body",
+		})
+	}
+
+	found := false
+	for _, movie := range movies {
+		if movie.Id == id {
+			movie.Title = body.Title
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"Error": "Movie not found",
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"message": "Pelicula actualizada correctamente",
+	})
+})
+
+//eliminar pelicula
+router.Delete("/:id", func(c *fiber.Ctx) error {
+	id, err := c.ParamsInt("id") //leo el id
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"Error": "Id invalido",
+		})
+	}
+
+	for index, movie := range movies {
+		if movie.Id == id {
+			movies = append(movies[:index], movies[index+1:]...)//elimina la pelicula del slice
+		}
+	}
+
+
+
+	return c.JSON(fiber.Map{
+		"message": "Pelicula eliminada correctamente",
+	})
+	
+})
 
 }
